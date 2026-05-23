@@ -1,0 +1,175 @@
+{
+  "_doc": "Proof-of-Prompt validation. Each role prompt is validated against the JSON Schema below, sent to the LLM via response_format={'type':'json_schema','schema':<this>}. The class is the schema, validator, and persistence format.",
+  "perception": {
+    "prompt_file": "prompts/perception.txt",
+    "model": "PerceptionOutput",
+    "provider": "g (Gemini, forced)",
+    "temperature": 1.0,
+    "auto_route": "perception",
+    "notes": "No goal-id field (positional identity); artifact_index is an integer, never a raw art: handle.",
+    "schema": {
+      "$defs": {
+        "PerceivedGoal": {
+          "description": "A goal as the Perception model is allowed to express it.\n\nNOTE the absence of any id field: goals are identified positionally.\n`artifact_index` is an INTEGER index into the indexed memory-hit artifacts\npresented in the prompt \u2014 never a raw `art:...` string. The loop maps the\ninteger back to a real handle (and drops it if it doesn't exist).",
+          "properties": {
+            "text": {
+              "title": "Text",
+              "type": "string"
+            },
+            "done": {
+              "default": false,
+              "title": "Done",
+              "type": "boolean"
+            },
+            "artifact_index": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Artifact Index"
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "title": "PerceivedGoal",
+          "type": "object"
+        }
+      },
+      "description": "Top-level structured output of a Perception call.",
+      "properties": {
+        "goals": {
+          "items": {
+            "$ref": "#/$defs/PerceivedGoal"
+          },
+          "title": "Goals",
+          "type": "array"
+        }
+      },
+      "title": "PerceptionOutput",
+      "type": "object"
+    }
+  },
+  "decision": {
+    "prompt_file": "prompts/decision.txt",
+    "model": "DecisionOutput / ToolCall (boundary)",
+    "auto_route": "decision (router picks tier; bypassed to AGENT_PROVIDER for large attachments)",
+    "temperature": 0.4,
+    "notes": "Decision uses the gateway's NATIVE function-calling: the model either emits a tool call (provider fills arguments as a real object) or plain text. decision.py validates the result into DecisionOutput (answer XOR tool_call). Native calling avoids the empty-{}/mangled-name failures that response_format JSON produces for an open arguments dict.",
+    "mechanism": "native tool-calling (tools + tool_choice='auto')",
+    "boundary_schemas": {
+      "DecisionOutput": {
+        "$defs": {
+          "ToolCall": {
+            "description": "Exactly one MCP tool invocation (INTERNAL boundary \u2014 arguments is a real\ndict the loop hands to Action).",
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "arguments": {
+                "additionalProperties": true,
+                "title": "Arguments",
+                "type": "object"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "title": "ToolCall",
+            "type": "object"
+          }
+        },
+        "description": "Decision returns EITHER a final answer OR exactly one tool call \u2014\nnever both, never two tools, never narration.\n\nThe model may, being a weak router-tier model, occasionally populate both\nfields. The `mode=\"after\"` validator normalizes to the invariant rather\nthan crashing the loop: a populated tool name wins; otherwise the answer\nstands; an empty output raises (caller treats it as a failed step).",
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Answer"
+          },
+          "tool_call": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ToolCall"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "DecisionOutput",
+        "type": "object"
+      },
+      "ToolCall": {
+        "description": "Exactly one MCP tool invocation (INTERNAL boundary \u2014 arguments is a real\ndict the loop hands to Action).",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "arguments": {
+            "additionalProperties": true,
+            "title": "Arguments",
+            "type": "object"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ToolCall",
+        "type": "object"
+      }
+    }
+  },
+  "memory_classify": {
+    "callsite": "memory.remember()",
+    "model": "_Classification",
+    "provider": "g (Gemini, forced)",
+    "temperature": 1.0,
+    "auto_route": "memory",
+    "notes": "The ONLY LLM call in Memory. Reads and record_outcome use no LLM.",
+    "schema": {
+      "description": "Schema for the single classify call in remember().",
+      "properties": {
+        "kind": {
+          "default": "scratchpad",
+          "title": "Kind",
+          "type": "string"
+        },
+        "keywords": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Keywords",
+          "type": "array"
+        },
+        "descriptor": {
+          "default": "",
+          "title": "Descriptor",
+          "type": "string"
+        },
+        "value": {
+          "additionalProperties": true,
+          "title": "Value",
+          "type": "object"
+        }
+      },
+      "title": "_Classification",
+      "type": "object"
+    }
+  }
+}

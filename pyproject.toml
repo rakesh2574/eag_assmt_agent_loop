@@ -1,0 +1,22 @@
+[project]
+name = "eag-agent6"
+version = "0.1.0"
+description = "EAG V3 Session 6 — four-cognitive-role agentic loop (Perception/Memory/Decision/Action)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.6",
+    "mcp>=1.2.0",
+    "httpx>=0.27",
+    "python-dotenv>=1.0",
+    "ddgs>=6.0",
+    "crawl4ai>=0.4",
+    "tavily-python>=0.5",
+]
+
+[tool.uv]
+# This is an application made of loose modules, not an installable library.
+# `package = false` tells uv not to try to build/install this project itself —
+# it just resolves the dependencies above into a managed environment.
+#   uv run python agent6.py "<query>"
+package = false

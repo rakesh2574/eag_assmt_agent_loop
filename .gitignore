@@ -1,0 +1,24 @@
+# Agent runtime state — MUST be cleanable between attempts.
+# A fresh start = `rm -rf state/`.
+state/
+
+# Secrets
+.env
+
+# MCP server sandbox + usage ledger (runtime artifacts)
+sandbox/
+usage.json
+
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+.uv/
+
+# leftover probe file from setup (safe to delete)
+.env_probe
+
+# Note: uv.lock IS committed (reproducible installs) — do not ignore it.
+
+# OS cruft
+.DS_Store
