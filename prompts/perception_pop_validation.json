@@ -1,0 +1,55 @@
+{
+  "prompt_file": "prompts/perception.txt",
+  "model": "PerceptionOutput",
+  "provider": "g (Gemini, forced)",
+  "temperature": 1.0,
+  "auto_route": "perception",
+  "notes": "No goal-id field (positional identity); artifact_index is an integer, never a raw art: handle.",
+  "schema": {
+    "$defs": {
+      "PerceivedGoal": {
+        "description": "A goal as the Perception model is allowed to express it.\n\nNOTE the absence of any id field: goals are identified positionally.\n`artifact_index` is an INTEGER index into the indexed memory-hit artifacts\npresented in the prompt \u2014 never a raw `art:...` string. The loop maps the\ninteger back to a real handle (and drops it if it doesn't exist).",
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "done": {
+            "default": false,
+            "title": "Done",
+            "type": "boolean"
+          },
+          "artifact_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Artifact Index"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "PerceivedGoal",
+        "type": "object"
+      }
+    },
+    "description": "Top-level structured output of a Perception call.",
+    "properties": {
+      "goals": {
+        "items": {
+          "$ref": "#/$defs/PerceivedGoal"
+        },
+        "title": "Goals",
+        "type": "array"
+      }
+    },
+    "title": "PerceptionOutput",
+    "type": "object"
+  }
+}

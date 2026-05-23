@@ -1,0 +1,80 @@
+{
+  "prompt_file": "prompts/decision.txt",
+  "model": "DecisionOutput / ToolCall (boundary)",
+  "auto_route": "decision (router picks tier; bypassed to AGENT_PROVIDER for large attachments)",
+  "temperature": 0.4,
+  "notes": "Decision uses the gateway's NATIVE function-calling: the model either emits a tool call (provider fills arguments as a real object) or plain text. decision.py validates the result into DecisionOutput (answer XOR tool_call). Native calling avoids the empty-{}/mangled-name failures that response_format JSON produces for an open arguments dict.",
+  "mechanism": "native tool-calling (tools + tool_choice='auto')",
+  "boundary_schemas": {
+    "DecisionOutput": {
+      "$defs": {
+        "ToolCall": {
+          "description": "Exactly one MCP tool invocation (INTERNAL boundary \u2014 arguments is a real\ndict the loop hands to Action).",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "type": "string"
+            },
+            "arguments": {
+              "additionalProperties": true,
+              "title": "Arguments",
+              "type": "object"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "title": "ToolCall",
+          "type": "object"
+        }
+      },
+      "description": "Decision returns EITHER a final answer OR exactly one tool call \u2014\nnever both, never two tools, never narration.\n\nThe model may, being a weak router-tier model, occasionally populate both\nfields. The `mode=\"after\"` validator normalizes to the invariant rather\nthan crashing the loop: a populated tool name wins; otherwise the answer\nstands; an empty output raises (caller treats it as a failed step).",
+      "properties": {
+        "answer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Answer"
+        },
+        "tool_call": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolCall"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "DecisionOutput",
+      "type": "object"
+    },
+    "ToolCall": {
+      "description": "Exactly one MCP tool invocation (INTERNAL boundary \u2014 arguments is a real\ndict the loop hands to Action).",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ToolCall",
+      "type": "object"
+    }
+  }
+}

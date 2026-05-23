@@ -1,0 +1,37 @@
+{
+  "callsite": "memory.remember()",
+  "model": "_Classification",
+  "provider": "g (Gemini, forced)",
+  "temperature": 1.0,
+  "auto_route": "memory",
+  "notes": "The ONLY LLM call in Memory. Reads and record_outcome use no LLM.",
+  "schema": {
+    "description": "Schema for the single classify call in remember().",
+    "properties": {
+      "kind": {
+        "default": "scratchpad",
+        "title": "Kind",
+        "type": "string"
+      },
+      "keywords": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Keywords",
+        "type": "array"
+      },
+      "descriptor": {
+        "default": "",
+        "title": "Descriptor",
+        "type": "string"
+      },
+      "value": {
+        "additionalProperties": true,
+        "title": "Value",
+        "type": "object"
+      }
+    },
+    "title": "_Classification",
+    "type": "object"
+  }
+}
